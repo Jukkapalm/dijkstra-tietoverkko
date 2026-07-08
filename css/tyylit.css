@@ -8,17 +8,16 @@
 }
 
 /* Perusasetukset */
-html {
+html, body {
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100%;
-}
-body {
+    min-height: 100vh;
     background-color: var(--bg-color);
     color: var(--text-main);
     font-family: 'Courier New', monospace;
-    min-height: 100vh;
+}
+body {
     padding: 1.5rem 0;
 }
 
@@ -36,9 +35,11 @@ body {
     background-color: var(--panel-bg);
     border: 1px solid rgba(0, 240, 255, 0.2);
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
-    min-height: 70vh;
+    height: 70vh;
+    width: 100%;
     position: relative;
     overflow: hidden;
+    display: block;
 }
 
 /* Käyttöliittymän oikea puoli */
@@ -46,7 +47,7 @@ body {
     background-color: var(--panel-bg);
     border: 1px solid rgba(0, 240, 255, 0.2);
     padding: 1.5rem;
-    min-height: 70vh;
+    height: 70vh;
 }
 
 .panel-subtitle {
@@ -60,14 +61,16 @@ body {
 /* Solmujen tyylit */
 .network-node {
     position: absolute;
-    width: 90px;
-    height: 50px;
+    width: 65px;
+    height: 35px;
     clip-path: polygon(0% 25%, 20% 0%, 100% 0%, 100% 75%, 80% 100%, 0% 100%);
     background: linear-gradient(135deg, var(--neon-green) 0%, rgba(57, 255, 20, 0.3) 100%);
     padding: 2px;
     cursor: pointer;
     transition: transform 0.2s ease, filter 0.2s ease;
     transform: translate(-50%, -50%);
+    z-index: 2;
+    font-size: 0.7rem;
 }
 
 .node-internal {
@@ -86,4 +89,24 @@ body {
 .network-node:hover {
     filter: drop-shadow(0 0 8px var(--neon-green));
     transform: translate(-50%, -50%) scale(1.05);
+}
+
+/* SVG asetukset */
+#svgCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    display: block;
+}
+
+/* Kaapelit */
+.network-cable {
+    stroke: rgba(0, 240, 255, 0.4);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke 0.3s ease;
 }
