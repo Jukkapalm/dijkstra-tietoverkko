@@ -63,7 +63,7 @@ function alustaKaapelit() {
     const svgAlusta = document.getElementById('svgCanvas');
 
     // Käydään läpi kaikki kaapelit
-    verkonKaapelit.forEach(kaapeli => {
+    verkonKaapelit.forEach((kaapeli,indeksi) => {
 
         // Etsitään lähtösolmun tiedot
         const lahtoSolmu = verkonSolmut.find(solmu => solmu.id === kaapeli.mista);
@@ -89,10 +89,28 @@ function alustaKaapelit() {
             viiva.setAttribute("x2", kohdeSolmu.x);
             viiva.setAttribute("y2", kohdeSolmu.y);
 
+            viiva.dataset.indeksi = indeksi;
+
             console.log(`Viiva: ${lahtoSolmu.id}(${lahtoSolmu.x},${lahtoSolmu.y}) → ${kohdeSolmu.id}(${kohdeSolmu.x},${kohdeSolmu.y})`);
 
             // Liitetään valmis viiva SVG-alustan sisälle näkyviin
             svgAlusta.appendChild(viiva);
+
+            const teksti = document.createElementNS(svgNamespace, "text");
+            teksti.setAttribute("x", (lahtoSolmu.x + kohdeSolmu.x) / 2);
+            teksti.setAttribute("y", (lahtoSolmu.y + kohdeSolmu.y) / 2);
+            teksti.setAttribute("text-anchor", "middle");
+            teksti.setAttribute("dominant-baseline", "middle");
+            teksti.setAttribute("font-size", "4");
+            teksti.setAttribute("fill", "#8ac4d0");
+            teksti.setAttribute("font-family", "Courier New, monospace");
+            teksti.setAttribute("font-weight", "bold");
+            teksti.textContent = kaapeli.viive + "ms";
+
+            // Tallennetaan kaapelin indeksi myös tekstiin
+            teksti.dataset.indeksi = indeksi;
+
+            svgAlusta.appendChild(teksti);
         }
     });
 }
@@ -329,8 +347,7 @@ function korostaReitti() {
         const kaapelitSvg = document.querySelectorAll('.network-cable');
         const indeksi = verkonKaapelit.indexOf(kaapeli);
         if (indeksi !== - 1 && kaapelitSvg[indeksi]) {
-            kaapelitSvg[indeksi].style.stroke = '#FFD700';
-            kaapelitSvg[indeksi].style.strokeWidth = '6';
+            kaapelitSvg[indeksi].style.stroke = '#39FF14';
         }
     }
 }
@@ -372,6 +389,17 @@ function uudelleenarvonta() {
     tila.kohdeId = null;
     tila.reitti = [];
     tila.kokonaisViive = 0;
+
+    // Päivitä näkymä – poista vanhat tekstit ja piirrä uudelleen
+    const vanhatTekstit = document.querySelectorAll('#svgCanvas text');
+    vanhatTekstit.forEach(teksti => teksti.remove());
+
+    // Piirrä kaapelit uudelleen (lisää uudet tekstit)
+    // Poista vanhat kaapelit ja piirrä uudelleen
+    const vanhatKaapelit = document.querySelectorAll('.network-cable');
+    vanhatKaapelit.forEach(kaapeli => kaapeli.remove());
+
+    alustaKaapelit();
 
     // Päivitä näkymä
     korostaSolmut();
