@@ -109,3 +109,25 @@ body {
     stroke-linecap: round;
     transition: stroke 0.3s ease;
 }
+
+/* Reittilista */
+.reitti-lista {
+    background: var(--bg-color);
+    padding: 12px;
+    min-height: 80px;
+    border: 1px solid #1A2A44;
+    margin: 15px 0;
+}
+
+.reset-button {
+    background: transparent;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 6px 18px;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    letter-spacing: 1px;
+    font-size: 0.75rem;
+    margin-top: 10px;
+}
