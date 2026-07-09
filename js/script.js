@@ -29,6 +29,8 @@ const verkonKaapelit = [
     { mista: "RTR-D",  mihin: "SRV-02" }
 ];
 
+const toolbox = document.getElementById('toolbox');
+
 // Piirtää solmut näytölle
 function alustaSolmut() {
     const alustaSivu = document.getElementById('networkContainer');
@@ -81,6 +83,8 @@ function alustaKaapelit() {
 
             // Asetetaan viivalle luokka tyylitiedostoa varten
             viiva.classList.add('network-cable');
+            viiva.style.pointerEvents = 'all';
+            viiva.style.cursor = 'pointer';
 
             // Määritellään mistä prosenttipisteestä viiva alkaa
             viiva.setAttribute("x1", lahtoSolmu.x);
@@ -96,6 +100,21 @@ function alustaKaapelit() {
 
             // Liitetään valmis viiva SVG-alustan sisälle näkyviin
             svgAlusta.appendChild(viiva);
+
+            viiva.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const rect = svgAlusta.getBoundingClientRect();
+                const toolX = e.clientX;
+                const toolY = e.clientY;
+
+                // Tallenna kaapelin indeksi työkalupakkiin
+                toolbox.dataset.indeksi = indeksi;
+
+                // Näytä työkalupakki klikkauksen kohdalla
+                toolbox.style.left = toolX + 'px';
+                toolbox.style.top = toolY + 'px';
+                toolbox.style.display = 'block';
+            });
 
             const teksti = document.createElementNS(svgNamespace, "text");
             teksti.setAttribute("x", (lahtoSolmu.x + kohdeSolmu.x) / 2);
@@ -208,11 +227,71 @@ function korostaSolmut() {
 // Reitin korostuksen poisto
 function poistaReitinKorostus() {
     const kaapelit = document.querySelectorAll('.network-cable');
+    const tekstit = document.querySelectorAll('#svgCanvas text');
 
-    kaapelit.forEach(kaapeli => {
-        kaapeli.style.stroke = 'rgba(0, 240, 255, 0.4)';
+    kaapelit.forEach((kaapeli, indeksi) => {
+        const verkonKaapeli = verkonKaapelit[indeksi];
+        if (!verkonKaapeli) return;
+
+        // Palauta väri tilan mukaan
+        let vari = 'rgba(0, 240, 255, 0.4)';
+        if (verkonKaapeli.tila === 'cut') vari = '#ff3355';
+        else if (verkonKaapeli.tila === 'jammed') vari = '#ff8833';
+
+        kaapeli.style.stroke = vari;
         kaapeli.style.strokeWidth = '3';
+        if (verkonKaapeli.tila === 'cut') {
+            kaapeli.style.strokeDasharray = '5';
+        } else {
+            kaapeli.style.strokeDasharray = 'none';
+        }
     });
+
+    tekstit.forEach((teksti, indeksi) => {
+        const verkonKaapeli = verkonKaapelit[indeksi];
+        if (!verkonKaapeli) return;
+
+        let vari = '#8ac4d0';
+        if (verkonKaapeli.tila === 'cut') vari = '#ff6b8a';
+        else if (verkonKaapeli.tila === 'jammed') vari = '#f5a042';
+
+        teksti.setAttribute('fill', vari);
+    });
+}
+
+// Päivittää yksittäisen kaapelin värin tilan mukaan
+function paivitaKaapelinVari(indeksi) {
+    const kaapeli = verkonKaapelit[indeksi];
+    const kaapelitSvg = document.querySelectorAll('.network-cable');
+    const tekstit = document.querySelectorAll('#svgCanvas text');
+
+    if (!kaapeli || !kaapelitSvg[indeksi]) return;
+
+    const viiva = kaapelitSvg[indeksi];
+    const teksti = tekstit[indeksi];
+
+    // Aseta väri tilan mukaan
+    let vari = 'rgba(0, 240, 255, 0.4)';
+    let tekstivari = '#8ac4d0';
+
+    if (kaapeli.tila === 'cut') {
+        vari = '#ff3355';
+        tekstivari = '#ff6b8a';
+        viiva.style.strokeDasharray = '6,6';
+    } else if (kaapeli.tila === 'jammed') {
+        vari = '#ff8833';
+        tekstivari = '#f5a042';
+        viiva.style.strokeDasharray = 'none';
+    } else {
+        vari = 'rgba(0, 240, 255, 0.4)';
+        tekstivari = '#8ac4d0';
+        viiva.style.strokeDasharray = 'none';
+    }
+
+    viiva.style.stroke = vari;
+    if (teksti) {
+        teksti.setAttribute('fill', tekstivari);
+    }
 }
 
 // Viiveet (painoarvot kaapeleille) ja tila
@@ -335,6 +414,9 @@ function korostaReitti() {
     // Poista vanha korostus
     poistaReitinKorostus();
 
+    const kaapelitSvg = document.querySelectorAll('.network-cable');
+    const tekstit = document.querySelectorAll('#svgCanvas text');
+
     // Käy läpi reitin vierekkäiset solmut
     for (let i = 0; i < tila.reitti.length - 1; i++) {
         const fromId = tila.reitti[i];
@@ -345,10 +427,17 @@ function korostaReitti() {
         if (!kaapeli) continue;
 
         // Etsi SVG-viiva (oletetaan että ne on lisätty samass järjestyksessä)
-        const kaapelitSvg = document.querySelectorAll('.network-cable');
+        //const kaapelitSvg = document.querySelectorAll('.network-cable');
         const indeksi = verkonKaapelit.indexOf(kaapeli);
+
         if (indeksi !== - 1 && kaapelitSvg[indeksi]) {
             kaapelitSvg[indeksi].style.stroke = '#39FF14';
+            kaapelitSvg[indeksi].style.strokeWidth = '3';
+            kaapelitSvg[indeksi].style.strokeDasharray = 'none';
+        }
+
+        if (indeksi !== -1 && tekstit[indeksi]) {
+            tekstit[indeksi].setAttribute('fill', '#39FF14');
         }
     }
 }
@@ -391,18 +480,13 @@ function uudelleenarvonta() {
     tila.reitti = [];
     tila.kokonaisViive = 0;
 
-    // Päivitä näkymä – poista vanhat tekstit ja piirrä uudelleen
+    const vanhatKaapelit = document.querySelectorAll('.network-cable');
+    vanhatKaapelit.forEach(kaapeli => kaapeli.remove());
     const vanhatTekstit = document.querySelectorAll('#svgCanvas text');
     vanhatTekstit.forEach(teksti => teksti.remove());
 
-    // Piirrä kaapelit uudelleen (lisää uudet tekstit)
-    // Poista vanhat kaapelit ja piirrä uudelleen
-    const vanhatKaapelit = document.querySelectorAll('.network-cable');
-    vanhatKaapelit.forEach(kaapeli => kaapeli.remove());
-
-    alustaKaapelit();
-
     // Päivitä näkymä
+    alustaKaapelit();
     korostaSolmut();
     poistaReitinKorostus();
     paivitaReittilista();
@@ -416,6 +500,59 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) {
         resetBtn.addEventListener('click', uudelleenarvonta);
+    }
+});
+
+// Työkalupakin toiminnot
+document.querySelectorAll('#toolbox .tool-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.stopPropagation();
+
+        const indeksi = parseInt(toolbox.dataset.indeksi);
+        if (isNaN(indeksi)) return;
+
+        const kaapeli = verkonKaapelit[indeksi];
+        if (!kaapeli) return;
+
+        const action = this.dataset.action;
+
+        switch (action) {
+            case 'cut':
+                if (kaapeli.tila === 'cut') {
+                    // Jos katkaistu, ei tehdä mitään
+                } else {
+                    kaapeli.tila = 'cut';
+                }
+                break;
+            case 'jam':
+                if (kaapeli.tila === 'jammed') {
+                    kaapeli.tila = 'normal';
+                } else {
+                    kaapeli.tila = 'jammed';
+                }
+                break;
+            case 'restore':
+                kaapeli.tila = 'normal';
+                break;
+            default:
+                break;
+        }
+
+        // Suljetaan työkalupakki
+        toolbox.style.display = 'none';
+
+        // Päivitetään kaapelin väri
+        paivitaKaapelinVari(indeksi);
+
+        // Lasketaan reitti uudelleen
+        laskeReitti();
+    });
+});
+
+// Sulje työkalupakki klikkaamalla muualle
+document.addEventListener('click', function(e) {
+    if (!toolbox.contains(e.target)) {
+        toolbox.style.display = 'none';
     }
 });
 
