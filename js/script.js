@@ -140,7 +140,13 @@ const tila = {
     lahdeId: null,
     kohdeId: null,
     reitti: [],
-    kokonaisViive: 0
+    kokonaisViive: 0,
+
+    // Animaation tila
+    paketti: null,
+    segmenttiIndeksi: 0,
+    edistyminen: 0,
+    animaatioId: null
 };
 
 // Solmujen valinta klikkaamalla
@@ -189,6 +195,7 @@ function valitseSolmu() {
             tila.reitti = [];
             korostaSolmut();
             poistaReitinKorostus();
+            pysaytaAnimaatio();
             console.log(`Lähde vaihdettu: ${solmuId}`);
         });
     });
@@ -406,6 +413,13 @@ function laskeReitti() {
     }
     paivitaReittilista();
     console.log('Reitti laskettu:', tila.reitti, 'Viive:', tila.kokonaisViive);
+
+    // Käynnistä tai pysäytä animaatio reitin mukaan
+    if (tila.reitti.length > 1 && tila.kokonaisViive < Infinity) {
+        kaynnistaAnimaatio();
+    } else {
+        pysaytaAnimaatio();
+    }
 }
 
 // Reitin korostus
@@ -467,6 +481,8 @@ function paivitaReittilista() {
 
 // Resetointi ja uudelleen arvonta
 function uudelleenarvonta() {
+
+    pysaytaAnimaatio();
 
     // Arvo uudet viiveet
     arvoViiveet();
@@ -555,6 +571,120 @@ document.addEventListener('click', function(e) {
         toolbox.style.display = 'none';
     }
 });
+
+// Luodaan "datapaketti"
+function luoPaketti() {
+    const svg = document.getElementById('svgCanvas');
+    const ns = "http://www.w3.org/2000/svg";
+
+    // Poista vanha paketti jos on
+    if (tila.paketti) {
+        tila.paketti.remove();
+        tila.paketti = null;
+    }
+
+    const circle = document.createElementNS(ns, "circle");
+    circle.setAttribute("r", "4");
+    circle.setAttribute("fill", "#39FF14");
+    circle.setAttribute("stroke", "#39FF14");
+    circle.setAttribute("stroke-width", "2");
+    circle.style.filter = "drop-shadow(0 0 10px #39FF14)";
+    circle.style.pointerEvents = "none";
+    circle.style.zIndex = "10";
+
+    // Aloita lähtösolmusta
+    const lahde = verkonSolmut.find(s => s.id === tila.lahdeId);
+    if (lahde) {
+        circle.setAttribute("cx", lahde.x);
+        circle.setAttribute("cy", lahde.y);
+    }
+
+    svg.appendChild(circle);
+    tila.paketti = circle;
+}
+
+// Päivitetään paketin sijainti
+function paivitaPaketti() {
+    if (!tila.paketti || tila.reitti.length < 2) return;
+
+    const fromId = tila.reitti[tila.segmenttiIndeksi];
+    const toId = tila.reitti[tila.segmenttiIndeksi + 1];
+
+    const fromNode = verkonSolmut.find(s => s.id === fromId);
+    const toNode = verkonSolmut.find(s => s.id === toId);
+
+    if (!fromNode || !toNode) return;
+
+    const t = tila.edistyminen;
+    const x = fromNode.x + (toNode.x - fromNode.x) * t;
+    const y = fromNode.y + (toNode.y - fromNode.y) * t;
+
+    tila.paketti.setAttribute("cx", x);
+    tila.paketti.setAttribute("cy", y);
+}
+
+// Paketin animaatiosilmukka
+function animoiPaketti() {
+    if (!tila.animaatioId) return;
+
+    // Päivitä edistyminen
+    const nopeus = 0.005;
+    tila.edistyminen += nopeus;
+
+    if (tila.edistyminen >= 1) {
+        tila.edistyminen = 0;
+        tila.segmenttiIndeksi++;
+
+        // Jos päästiin reitin loppuun -> aloita alusta
+        if (tila.segmenttiIndeksi >= tila.reitti.length - 1) {
+            tila.segmenttiIndeksi = 0;
+        }
+    }
+
+    paivitaPaketti();
+    tila.animaatioId = requestAnimationFrame(animoiPaketti);
+}
+
+// Käynnistetään animaatio
+function kaynnistaAnimaatio() {
+    if (tila.animaatioId) {
+        cancelAnimationFrame(tila.animaatioId);
+        tila.animaatioId = null;
+    }
+
+    if (tila.reitti.length < 2 || tila.kokonaisViive >= Infinity) {
+        // Ei reittiä -> poista paketti
+        if (tila.paketti) {
+            tila.paketti.remove();
+            tila.paketti = null;
+        }
+        return;
+    }
+
+    // Luo paketti jos ei ole
+    if (!tila.paketti) {
+        luoPaketti();
+    }
+
+    // Alusta segmentit
+    tila.segmenttiIndeksi = 0;
+    tila.edistyminen = 0;
+
+    // Käynnistä animaatio
+    tila.animaatioId = requestAnimationFrame(animoiPaketti);
+}
+
+// Pysäytä animaatio
+function pysaytaAnimaatio() {
+    if (tila.animaatioId) {
+        cancelAnimationFrame(tila.animaatioId);
+        tila.animaatioId = null;
+    }
+    if (tila.paketti) {
+        tila.paketti.remove();
+        tila.paketti = null;
+    }
+}
 
 // Piirretaan solmut ja yhteydet
 window.onload = function() {
