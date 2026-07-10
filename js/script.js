@@ -136,7 +136,7 @@ function alustaKaapelit() {
             teksti.setAttribute("text-anchor", "middle");
             teksti.setAttribute("dominant-baseline", "middle");
             teksti.setAttribute("font-size", "4");
-            teksti.setAttribute("fill", "#8ac4d0");
+            teksti.setAttribute("fill", "#8AC4d0");
             teksti.setAttribute("font-family", "Courier New, monospace");
             teksti.setAttribute("font-weight", "bold");
             teksti.textContent = kaapeli.viive + "ms";
@@ -157,9 +157,8 @@ const tila = {
     kokonaisViive: 0,
 
     // Animaation tila
-    paketti: null,
-    segmenttiIndeksi: 0,
-    edistyminen: 0,
+    paketit: [],
+    pakettienMaara: 3,
     animaatioId: null
 };
 
@@ -256,27 +255,30 @@ function poistaReitinKorostus() {
 
         // Palauta väri tilan mukaan
         let vari = 'rgba(0, 240, 255, 0.4)';
-        if (verkonKaapeli.tila === 'cut') vari = '#ff3355';
-        else if (verkonKaapeli.tila === 'jammed') vari = '#ff8833';
+        if (verkonKaapeli.tila === 'cut') vari = '#FF3355';
+        else if (verkonKaapeli.tila === 'jammed') vari = '#FF8833';
 
         kaapeli.style.stroke = vari;
         kaapeli.style.strokeWidth = '3';
-        if (verkonKaapeli.tila === 'cut') {
-            kaapeli.style.strokeDasharray = '5';
-        } else {
-            kaapeli.style.strokeDasharray = 'none';
-        }
+        kaapeli.style.strokeDasharray = verkonKaapeli.tila === 'cut' ? '6,6' : 'none';
     });
 
     tekstit.forEach((teksti, indeksi) => {
         const verkonKaapeli = verkonKaapelit[indeksi];
         if (!verkonKaapeli) return;
 
-        let vari = '#8ac4d0';
-        if (verkonKaapeli.tila === 'cut') vari = '#ff6b8a';
-        else if (verkonKaapeli.tila === 'jammed') vari = '#f5a042';
+        let vari = '#8AC4d0';
+        let viiveTeksti = verkonKaapeli.viive + 'ms';
+
+        if (verkonKaapeli.tila === 'cut') {
+            vari = '#FF6B8A';
+        } else if (verkonKaapeli.tila === 'jammed') {
+            vari = '#F5A042';
+            viiveTeksti = (verkonKaapeli.viive * 2) + 'ms';
+        }
 
         teksti.setAttribute('fill', vari);
+        teksti.textContent = viiveTeksti;
     });
 }
 
@@ -293,25 +295,28 @@ function paivitaKaapelinVari(indeksi) {
 
     // Aseta väri tilan mukaan
     let vari = 'rgba(0, 240, 255, 0.4)';
-    let tekstivari = '#8ac4d0';
+    let tekstivari = '#8AC4d0';
+    let viiveTeksti = kaapeli.viive + 'ms';
 
     if (kaapeli.tila === 'cut') {
-        vari = '#ff3355';
-        tekstivari = '#ff6b8a';
+        vari = '#FF3355';
+        tekstivari = '#FF6B8A';
         viiva.style.strokeDasharray = '6,6';
     } else if (kaapeli.tila === 'jammed') {
-        vari = '#ff8833';
-        tekstivari = '#f5a042';
+        vari = '#FF8833';
+        tekstivari = '#FF3355';
         viiva.style.strokeDasharray = 'none';
+        viiveTeksti = (kaapeli.viive * 2) + 'ms';
     } else {
         vari = 'rgba(0, 240, 255, 0.4)';
-        tekstivari = '#8ac4d0';
+        tekstivari = '#8AC4D0';
         viiva.style.strokeDasharray = 'none';
     }
 
     viiva.style.stroke = vari;
     if (teksti) {
         teksti.setAttribute('fill', tekstivari);
+        teksti.textContent = viiveTeksti;
     }
 }
 
@@ -329,7 +334,7 @@ arvoViiveet();
 // Apufunktio kaapelin viiveen hakemiseksi ja huomioi tila
 function haeKaapelinViive(kaapeli) {
     if (kaapeli.tila === 'cut') return Infinity;
-    if (kaapeli.tila === 'jammed') return kaapeli.viive * 5;
+    if (kaapeli.tila === 'jammed') return kaapeli.viive * 2;
     return kaapeli.viive;
 }
 
@@ -459,7 +464,7 @@ function korostaReitti() {
         const indeksi = verkonKaapelit.indexOf(kaapeli);
 
         if (indeksi !== - 1 && kaapelitSvg[indeksi]) {
-            kaapelitSvg[indeksi].style.stroke = '#39FF14';
+            kaapelitSvg[indeksi].style.stroke = '#C9A84C';
             kaapelitSvg[indeksi].style.strokeWidth = '3';
             kaapelitSvg[indeksi].style.strokeDasharray = 'none';
         }
@@ -484,12 +489,12 @@ function paivitaReittilista() {
         listaElementti.innerHTML = `
             <div style="color: #FFD700; font-weight: bold;">Reitti:</div>
             <div>${reittiTeksti}</div>
-            <div style="color: #8ac4d0; margin-top: 8px;">Kokonaisviive: ${tila.kokonaisViive} ms</div>
+            <div style="color: #8AC4d0; margin-top: 8px;">Kokonaisviive: ${tila.kokonaisViive} ms</div>
         `;
     } else if (tila.lahdeId !== null && tila.kohdeId !== null) {
-        listaElementti.innerHTML = `<div style="color: #ff6b8a;">⚠ Yhteyttä ei löytynyt (katkaistu tai ruuhkautunut)</div>`;
+        listaElementti.innerHTML = `<div style="color: #FF6B8A;">⚠ Yhteyttä ei löytynyt (katkaistu tai ruuhkautunut)</div>`;
     } else {
-        listaElementti.innerHTML = `<div style="color: #4a6a7a;">Valitse lähde ja kohde</div>`;
+        listaElementti.innerHTML = `<div style="color: #4A6A7A;">Valitse lähde ja kohde</div>`;
     }
 }
 
@@ -586,55 +591,60 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Luodaan "datapaketti"
-function luoPaketti() {
+// Luodaan "datapaketit"
+function luoPaketit() {
     const svg = document.getElementById('svgCanvas');
     const ns = "http://www.w3.org/2000/svg";
 
-    // Poista vanha paketti jos on
-    if (tila.paketti) {
-        tila.paketti.remove();
-        tila.paketti = null;
+    // Poista vanhat paketit
+    tila.paketit.forEach(p => p.element.remove());
+    tila.paketit = [];
+
+    const maxIndex = tila.reitti.length - 1;
+
+    // Luo jokaiselle paketille oma elementti
+    for (let i = 0; i < tila.pakettienMaara; i++) {
+        const circle = document.createElementNS(ns, "circle");
+        circle.setAttribute("r", "2");
+        circle.setAttribute("fill", "#39FF14");
+        circle.setAttribute("stroke-width", "2");
+        circle.style.pointerEvents = "none";
+        circle.style.zIndex = "10";
+
+        const aloitus = (i / tila.pakettienMaara) * maxIndex;
+
+        tila.paketit.push({
+            element: circle,
+            kokonaisEdistyminen: aloitus
+        });
+
+        svg.appendChild(circle);
+
+        // Päivitetään kaikkien pakettien sijainti
+        paivitaKaikkiPaketit();
     }
-
-    const circle = document.createElementNS(ns, "circle");
-    circle.setAttribute("r", "4");
-    circle.setAttribute("fill", "#39FF14");
-    circle.setAttribute("stroke", "#39FF14");
-    circle.setAttribute("stroke-width", "2");
-    circle.style.filter = "drop-shadow(0 0 10px #39FF14)";
-    circle.style.pointerEvents = "none";
-    circle.style.zIndex = "10";
-
-    // Aloita lähtösolmusta
-    const lahde = verkonSolmut.find(s => s.id === tila.lahdeId);
-    if (lahde) {
-        circle.setAttribute("cx", lahde.x);
-        circle.setAttribute("cy", lahde.y);
-    }
-
-    svg.appendChild(circle);
-    tila.paketti = circle;
 }
 
 // Päivitetään paketin sijainti
-function paivitaPaketti() {
-    if (!tila.paketti || tila.reitti.length < 2) return;
+function paivitaKaikkiPaketit() {
+    if (tila.paketit.length === 0 || tila.reitti.length < 2) return;
 
-    const fromId = tila.reitti[tila.segmenttiIndeksi];
-    const toId = tila.reitti[tila.segmenttiIndeksi + 1];
+    tila.paketit.forEach(paketti => {
+        const fromId = tila.reitti[paketti.segmenttiIndeksi];
+        const toId = tila.reitti[paketti.segmenttiIndeksi + 1];
 
-    const fromNode = verkonSolmut.find(s => s.id === fromId);
-    const toNode = verkonSolmut.find(s => s.id === toId);
+        const fromNode = verkonSolmut.find(s => s.id === fromId);
+        const toNode = verkonSolmut.find(s => s.id === toId);
 
-    if (!fromNode || !toNode) return;
+        if (!fromNode || !toNode) return;
 
-    const t = tila.edistyminen;
-    const x = fromNode.x + (toNode.x - fromNode.x) * t;
-    const y = fromNode.y + (toNode.y - fromNode.y) * t;
+        const t = paketti.edistyminen;
+        const x = fromNode.x + (toNode.x - fromNode.x) * t;
+        const y = fromNode.y + (toNode.y - fromNode.y) * t;
 
-    tila.paketti.setAttribute("cx", x);
-    tila.paketti.setAttribute("cy", y);
+        paketti.element.setAttribute("cx", x);
+        paketti.element.setAttribute("cy", y);
+    });
 }
 
 // Paketin animaatiosilmukka
@@ -643,19 +653,28 @@ function animoiPaketti() {
 
     // Päivitä edistyminen
     const nopeus = 0.005;
-    tila.edistyminen += nopeus;
+    const maxIndex = tila.reitti.length - 1;
 
-    if (tila.edistyminen >= 1) {
-        tila.edistyminen = 0;
-        tila.segmenttiIndeksi++;
+    tila.paketit.forEach(paketti => {
 
-        // Jos päästiin reitin loppuun -> aloita alusta
-        if (tila.segmenttiIndeksi >= tila.reitti.length - 1) {
-            tila.segmenttiIndeksi = 0;
+        // Kasvata edistymistä
+        paketti.kokonaisEdistyminen += nopeus;
+
+        // Kierrätä reitin alkuun
+        if (paketti.kokonaisEdistyminen >= maxIndex) {
+            paketti.kokonaisEdistyminen -= maxIndex;
         }
-    }
 
-    paivitaPaketti();
+        const seg = Math.floor(paketti.kokonaisEdistyminen);
+
+        const segIndex = Math.min(seg, maxIndex - 1);
+        const edist = paketti.kokonaisEdistyminen - seg;
+
+        paketti.segmenttiIndeksi = segIndex;
+        paketti.edistyminen = edist;
+    });
+
+    paivitaKaikkiPaketit();
     tila.animaatioId = requestAnimationFrame(animoiPaketti);
 }
 
@@ -667,22 +686,15 @@ function kaynnistaAnimaatio() {
     }
 
     if (tila.reitti.length < 2 || tila.kokonaisViive >= Infinity) {
-        // Ei reittiä -> poista paketti
-        if (tila.paketti) {
-            tila.paketti.remove();
-            tila.paketti = null;
-        }
+        tila.paketit.forEach(p => p.element.remove());
+        tila.paketit = [];
         return;
     }
 
-    // Luo paketti jos ei ole
-    if (!tila.paketti) {
-        luoPaketti();
+    // Luo paketit jos niitä ei ole
+    if (tila.paketit.length === 0) {
+        luoPaketit();
     }
-
-    // Alusta segmentit
-    tila.segmenttiIndeksi = 0;
-    tila.edistyminen = 0;
 
     // Käynnistä animaatio
     tila.animaatioId = requestAnimationFrame(animoiPaketti);
@@ -694,10 +706,8 @@ function pysaytaAnimaatio() {
         cancelAnimationFrame(tila.animaatioId);
         tila.animaatioId = null;
     }
-    if (tila.paketti) {
-        tila.paketti.remove();
-        tila.paketti = null;
-    }
+    tila.paketit.forEach(p => p.element.remove());
+    tila.paketit = [];
 }
 
 // Piirretaan solmut ja yhteydet
