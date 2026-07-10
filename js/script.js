@@ -475,16 +475,20 @@ function korostaReitti() {
         const indeksi = verkonKaapelit.indexOf(kaapeli);
 
         if (indeksi !== - 1 && kaapelitSvg[indeksi]) {
-            kaapelitSvg[indeksi].style.stroke = '#39FF14';
-            kaapelitSvg[indeksi].style.strokeWidth = '2';
-            kaapelitSvg[indeksi].style.strokeDasharray = 'none';
+            if (verkonKaapelit[indeksi].tila !== 'jammed') {
+                kaapelitSvg[indeksi].style.stroke = '#39FF14';
+                kaapelitSvg[indeksi].style.strokeWidth = '3';
+                kaapelitSvg[indeksi].style.strokeDasharray = 'none';
+            }
         }
 
         if (indeksi !== -1 && tekstit[indeksi]) {
-            tekstit[indeksi].setAttribute('fill', '#39FF14');
-            tekstit[indeksi].setAttribute('stroke', '#0A0B10');
-            tekstit[indeksi].setAttribute('stroke-width', '1.5');
-            tekstit[indeksi].setAttribute('paint-order', 'stroke fill');
+            if (verkonKaapelit[indeksi].tila !== 'jammed') {
+                tekstit[indeksi].setAttribute('fill', '#39FF14');
+                tekstit[indeksi].setAttribute('stroke', '#0A0B10');
+                tekstit[indeksi].setAttribute('stroke-width', '1.5');
+                tekstit[indeksi].setAttribute('paint-order', 'stroke fill');
+            }
         }
     }
 }
